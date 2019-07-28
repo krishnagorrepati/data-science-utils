@@ -43,6 +43,17 @@ def rmsle(y_true,y_pred):
     y_pred = np.asarray(y_pred)
     return mean_squared_error(np.log(y_true + 1),np.log(y_pred + 1)) ** 0.5
 
+def signed_rmsle(y_true,y_pred):
+    """
+    Useful for regression problems where you also have negative values and need log errors
+    :param y_true:
+    :param y_pred:
+    :return:
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    return mean_squared_error(np.sign(y_true)*np.log(np.abs(y_true) + 1),np.sign(y_pred)*np.log(np.abs(y_pred) + 1)) ** 0.5
+
 def rmse(y_true,y_pred):
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -57,6 +68,13 @@ def mean_absolute_percentage_error(y_true, y_pred, epsilon=1e-4):
                                             None))
     return 100. * np.mean(diff)
 
+def median_absolute_percentage_error(y_true, y_pred, epsilon=1e-4):
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    diff = np.abs((y_true - y_pred) / np.clip(np.abs(y_true),
+                                              epsilon,
+                                            None))
+    return 100. * np.median(diff)
 
 def gini(actual, pred, cmpcol = 0, sortcol = 1):
     assert( len(actual) == len(pred) )

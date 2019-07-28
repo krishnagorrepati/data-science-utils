@@ -12,7 +12,34 @@ from IPython.display import display
 import seaborn as sns
 from .visualize_layer import visualize_layer
 from .adabound import AdaBound
+from .one_cycle_lr import OneCycleLR
+from .lr_finder import LRFinder
+from .gradcam import *
+from .layer_utils import *
+from .regularizers import *
 from keras.datasets import cifar10
+
+from keras import backend as K
+import time
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import precision_recall_fscore_support, confusion_matrix, balanced_accuracy_score, accuracy_score
+from keras.models import Sequential
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, DepthwiseConv2D, Conv2D, SeparableConv2D, AveragePooling2D
+from keras.layers import Input, concatenate
+from keras.layers import Activation, Flatten, Dense, Dropout, Lambda, SpatialDropout2D, Add
+from keras.layers.normalization import BatchNormalization
+from keras.layers.pooling import GlobalAveragePooling2D, GlobalMaxPooling2D
+from keras.utils import np_utils
+from keras.preprocessing.image import ImageDataGenerator
+from keras.optimizers import SGD, Nadam, Adam
+from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, LearningRateScheduler
+from keras.regularizers import l2
+from keras_contrib.callbacks import CyclicLR
+from keras.models import Model
+import tensorflow as tf
+import random
 
 def get_mnist_labels():
     return list(range(0, 10))
@@ -61,6 +88,10 @@ def get_fashion_mnist_data(preprocess=False):
 
 def get_cifar10_labels():
     return ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
+
+def get_imagenet_labels():
+    from .imagenet_classes import imagenet_classes
+    return imagenet_classes
 
 def get_cifar10_data(preprocess=False):
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
@@ -217,7 +248,7 @@ def plot_model_history(model_history, clip_beginning=0):
     val_acc = model_history.history['val_acc']
     axs[0].plot(range(clip_beginning+1,len(acc)+1),acc[clip_beginning:])
     axs[0].plot(range(clip_beginning+1,len(val_acc)+1),val_acc[clip_beginning:])
-    axs[0].set_title('Model Accuracy')
+    axs[0].set_title('Model Accuracy: Train = %.3f, Validation = %.3f'%(acc[-1],val_acc[-1]))
     axs[0].set_ylabel('Accuracy')
     axs[0].set_xlabel('Epoch')
     axs[0].set_xticks(np.arange(clip_beginning+1,len(acc)+1),len(acc)/10)
@@ -227,7 +258,7 @@ def plot_model_history(model_history, clip_beginning=0):
     val_loss = model_history.history['val_loss']
     axs[1].plot(range(clip_beginning+1,len(loss)+1),loss[clip_beginning:])
     axs[1].plot(range(clip_beginning+1,len(val_loss)+1),val_loss[clip_beginning:])
-    axs[1].set_title('Model Loss')
+    axs[1].set_title('Model Loss: Train = %.3f, Validation = %.3f'%(loss[-1],val_loss[-1]))
     axs[1].set_ylabel('Loss')
     axs[1].set_xlabel('Epoch')
     axs[1].set_xticks(np.arange(clip_beginning+1,len(loss)+1),len(loss)/10)
